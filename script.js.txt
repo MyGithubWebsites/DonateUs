@@ -1,0 +1,60 @@
+// Replace with your own test publishable key from Stripe Dashboard
+var stripe = Stripe('pk_test_XXXXXXXXXXXXXXXXXXXXXXXX');
+
+// Create an instance of Elements
+var elements = stripe.elements();
+
+// Custom styling for Stripe Elements
+var style = {
+    base: {
+        color: '#32325d',
+        fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+        fontSmoothing: 'antialiased',
+        fontSize: '16px',
+        '::placeholder': {
+            color: '#aab7c4'
+        }
+    },
+    invalid: {
+        color: '#fa755a',
+        iconColor: '#fa755a'
+    }
+};
+
+// Create an instance of the card Element
+var card = elements.create('card', { style: style });
+
+// Add the card Element to the form
+card.mount('#card-element');
+
+// Handle form submission
+var form = document.getElementById('payment-form');
+
+form.addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    stripe.createToken(card).then(function(result) {
+        if (result.error) {
+            // Show error in #card-errors element
+            var errorElement = document.getElementById('card-errors');
+            errorElement.textContent = result.error.message;
+        } else {
+            // Send the token to your server
+            stripeTokenHandler(result.token);
+        }
+    });
+});
+
+// Submit the token to the server
+function stripeTokenHandler(token) {
+    var form = document.getElementById('payment-form');
+    var hiddenInput = document.createElement('input');
+    hiddenInput.setAttribute('type', 'hidden');
+    hiddenInput.setAttribute('name', 'stripeToken');
+    hiddenInput.setAttribute('value', token.id);
+    form.appendChild(hiddenInput);
+
+    // Submit the form
+    form.submit();
+}
+
